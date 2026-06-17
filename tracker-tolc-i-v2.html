@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOLC-I Tracker Completo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root {
+  --bg:#111113;--card:#18181B;--card2:#1E1E22;--card3:#232329;
+  --border:#2A2A30;--border2:#333340;
+  --text:#EDEDF0;--muted:#72727A;--muted2:#9999A6;
+  --math:#F97316;--science:#22D3EE;--logic:#A78BFA;--sim:#34D399;--accent:#FACC15;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;padding:16px 14px 80px;max-width:720px;margin:0 auto;font-size:14px;line-height:1.6;}
+/* HEADER */
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+h1{font-size:clamp(20px,5vw,28px);font-weight:700;line-height:1.2;margin-bottom:4px;}
+.sub{color:var(--muted2);font-size:13px;margin-bottom:24px;}
+/* PROGRESS */
+.prog-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:22px;}
+.prog-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.prog-lbl{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;font-weight:500;}
+.prog-cnt{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);}
+.bar-track{height:5px;background:var(--border2);border-radius:99px;overflow:hidden;margin-bottom:14px;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--sim));border-radius:99px;transition:width .4s;}
+.sec-bars{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sbi{display:flex;flex-direction:column;gap:4px;}
+.sbi-lbl{display:flex;justify-content:space-between;font-size:11px;}
+.sbi-name{color:var(--muted2);}
+.sbi-pct{font-family:'JetBrains Mono',monospace;font-size:10px;}
+.mini-track{height:3px;background:var(--border2);border-radius:99px;overflow:hidden;}
+.mini-fill{height:100%;border-radius:99px;transition:width .4s;}
+/* PHASE */
+.phase{margin-bottom:14px;}
+.phase-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px;user-select:none;transition:border-color .2s;}
+.phase-hdr:hover{border-color:var(--border2);}
+.phase-hdr.open{border-radius:10px 10px 0 0;border-bottom-color:transparent;}
+.phase-left{display:flex;align-items:center;gap:10px;}
+.phase-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.phase-title{font-weight:600;font-size:14px;}
+.phase-meta{display:flex;align-items:center;gap:8px;}
+.phase-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);}
+.phase-pct{font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 7px;border-radius:5px;background:var(--card2);color:var(--muted2);min-width:40px;text-align:center;}
+.chevron{color:var(--muted);font-size:11px;transition:transform .25s;}
+.phase-hdr.open .chevron{transform:rotate(180deg);}
+.phase-body{display:none;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;}
+.phase-body.open{display:block;}
+/* SUBJECT */
+.subj-group{border-bottom:1px solid var(--border);}
+.subj-group:last-child{border-bottom:none;}
+.subj-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px 8px;}
+.subj-bar{width:3px;height:16px;border-radius:2px;flex-shrink:0;}
+.subj-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);}
+.subj-prog{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);}
+/* MODULE */
+.module{border-bottom:1px solid var(--border);}
+.module:last-child{border-bottom:none;}
+.mod-hdr{display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;transition:background .15s;}
+.mod-hdr:hover{background:var(--card2);}
+.mod-check{width:17px;height:17px;border:1.5px solid var(--border2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.mod-check.checked{background:var(--sim);border-color:var(--sim);}
+.mod-check.checked::after{content:'✓';color:#000;font-size:10px;font-weight:700;}
+.mod-title{font-size:13px;font-weight:500;flex:1;}
+.mod-title.done{text-decoration:line-through;color:var(--muted);}
+.mod-chev{font-size:10px;color:var(--muted);transition:transform .2s;}
+.mod-chev.open{transform:rotate(180deg);}
+/* LESSON */
+.lessons{display:none;flex-direction:column;}
+.lessons.open{display:flex;}
+.lesson{border-bottom:1px solid var(--border);cursor:pointer;}
+.lesson:last-child{border-bottom:none;}
+.lesson-top{display:flex;align-items:center;gap:9px;padding:8px 14px 8px 32px;transition:background .15s;}
+.lesson-top:hover{background:var(--card2);}
+.les-check{width:14px;height:14px;border:1.5px solid var(--border2);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.les-check.checked{background:var(--sim);border-color:var(--sim);}
+.les-check.checked::after{content:'✓';color:#000;font-size:8px;font-weight:700;}
+.les-info{flex:1;}
+.les-title{font-size:12px;font-weight:500;line-height:1.4;}
+.les-title.done{text-decoration:line-through;color:var(--muted);}
+.les-tag{font-size:9px;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
+.tag-teoria{background:rgba(250,204,21,.12);color:var(--accent);}
+.tag-esercizi{background:rgba(34,211,238,.12);color:var(--science);}
+.tag-quiz{background:rgba(167,139,250,.15);color:var(--logic);}
+.tag-sim{background:rgba(52,211,153,.15);color:var(--sim);}
+/* CONTENT PANEL */
+.les-content{display:none;padding:12px 14px 14px 46px;background:var(--card3);border-top:1px solid var(--border);}
+.les-content.open{display:block;}
+.content-block{margin-bottom:14px;}
+.content-block:last-child{margin-bottom:0;}
+.cb-label{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;}
+.teoria-text{font-size:12px;color:#ccc;line-height:1.7;}
+.teoria-text strong{color:var(--text);}
+.formula-box{background:#0D0D0F;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);line-height:1.8;margin:8px 0;}
+.esercizi-list{display:flex;flex-direction:column;gap:8px;}
+.esercizio{background:var(--card2);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.ez-q{padding:9px 12px;font-size:12px;cursor:pointer;user-select:none;display:flex;align-items:flex-start;gap:8px;}
+.ez-q:hover{background:#26262e;}
+.ez-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;margin-top:1px;}
+.ez-text{flex:1;line-height:1.5;}
+.ez-reveal{font-size:9px;color:var(--muted);flex-shrink:0;margin-top:2px;}
+.ez-answer{display:none;padding:8px 12px 10px 32px;border-top:1px solid var(--border);font-size:12px;background:#0D0D0F;}
+.ez-answer.open{display:block;}
+.answer-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--sim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.answer-text{color:#bbb;line-height:1.6;}
+.answer-text strong{color:var(--sim);}
+/* TIP */
+.tip-box{background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.2);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--muted2);margin:10px 14px 12px;}
+.tip-box strong{color:var(--accent);}
+/* RESET */
+.reset-btn{display:block;margin:28px auto 0;background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;padding:8px 18px;border-radius:6px;cursor:pointer;transition:all .2s;}
+.reset-btn:hover{border-color:var(--logic);color:var(--logic);}
+</style>
+</head>
+<body>
+
+<div class="eyebrow">Design del Prodotto Industriale · Unibo Bologna</div>
+<h1>TOLC-I Study Tracker</h1>
+<div class="sub">Settembre 2026 · Tutto il materiale è qui dentro — nessun link esterno</div>
+
+<div class="prog-wrap">
+  <div class="prog-hdr"><span class="prog-lbl">Progresso totale</span><span class="prog-cnt" id="total-cnt">0 / 0</span></div>
+  <div class="bar-track"><div class="bar-fill" id="total-bar" style="width:0%"></div></div>
+  <div class="sec-bars">
+    <div class="sbi"><div class="sbi-lbl"><span class="sbi-name" style="color:var(--math)">Matematica</span><span class="sbi-pct" id="pct-math" style="color:var(--math)">0%</span></div><div class="mini-track"><div class="mini-fill" id="bar-math" style="background:var(--math);width:0%"></div></div></div>
+    <div class="sbi"><div class="sbi-lbl"><span class="sbi-name" style="color:var(--science)">Scienze</span><span class="sbi-pct" id="pct-science" style="color:var(--science)">0%</span></div><div class="mini-track"><div class="mini-fill" id="bar-science" style="background:var(--science);width:0%"></div></div></div>
+    <div class="sbi"><div class="sbi-lbl"><span class="sbi-name" style="color:var(--logic)">Logica</span><span class="sbi-pct" id="pct-logic" style="color:var(--logic)">0%</span></div><div class="mini-track"><div class="mini-fill" id="bar-logic" style="background:var(--logic);width:0%"></div></div></div>
+    <div class="sbi"><div class="sbi-lbl"><span class="sbi-name" style="color:var(--sim)">Simulazioni</span><span class="sbi-pct" id="pct-sim" style="color:var(--sim)">0%</span></div><div class="mini-track"><div class="mini-fill" id="bar-sim" style="background:var(--sim);width:0%"></div></div></div>
+  </div>
+</div>
+
+<div id="root"></div>
+<button class="reset-btn" onclick="resetAll()">↺ Reset progresso</button>
+
+<script>
+const PHASES = [
+{id:"f1",title:"Fase 1 — Matematica",date:"Giu → 6 Lug",color:"var(--math)",cat:"math",tip:"<strong>Regola d'oro:</strong> dopo ogni lezione fai subito gli esercizi. Non passare al modulo successivo se gli esercizi ti sembrano ancora difficili.",subjects:[
+{name:"Aritmetica & Algebra",modules:[
+{title:"Numeri: interi, razionali, reali",lessons:[
+{title:"Teoria: tipi di numeri e operazioni",tag:"teoria",teoria:`I numeri si dividono in famiglie: <strong>interi</strong> (…−2, −1, 0, 1, 2…), <strong>razionali</strong> (frazioni come 3/4, −2/5) e <strong>reali</strong> (includono anche √2, π…).<br><br><strong>Valore assoluto:</strong> |x| è la distanza di x dallo zero. |−5| = 5, |3| = 3.<br><br><strong>Proprietà delle operazioni:</strong><br>• Commutativa: a+b = b+a, a×b = b×a<br>• Associativa: (a+b)+c = a+(b+c)<br>• Distributiva: a×(b+c) = a×b + a×c`,formule:["Valore assoluto: |x| = x se x≥0, |x| = −x se x<0","Regola dei segni: (−)×(−) = (+), (+)×(−) = (−)"],esercizi:[{q:"Calcola: |−7| + |3| − |−2|",a:"= 7 + 3 − 2 = <strong>8</strong>"},{q:"Quale dei seguenti è un numero razionale? √2, π, −3/7, √3",a:"<strong>−3/7</strong> è razionale perché è una frazione di interi. √2, π, √3 sono irrazionali."},{q:"Calcola: (−3) × (−4) + (−2) × 5",a:"= (+12) + (−10) = <strong>2</strong>"}]},
+{title:"Teoria: frazioni — operazioni",tag:"teoria",teoria:`<strong>Somma/differenza:</strong> porta allo stesso denominatore (m.c.m.).<br>Esempio: 1/3 + 1/4 → m.c.m.=12 → 4/12 + 3/12 = 7/12<br><br><strong>Moltiplicazione:</strong> numeratore × numeratore, denominatore × denominatore.<br>2/3 × 3/5 = 6/15 = 2/5<br><br><strong>Divisione:</strong> moltiplica per il reciproco.<br>2/3 ÷ 4/5 = 2/3 × 5/4 = 10/12 = 5/6<br><br><strong>Semplificazione:</strong> dividi numeratore e denominatore per il loro M.C.D.`,formule:["a/b + c/d = (ad + bc) / bd","a/b × c/d = ac / bd","a/b ÷ c/d = a/b × d/c"],esercizi:[{q:"Calcola: 2/3 + 3/4",a:"m.c.m.(3,4)=12 → 8/12 + 9/12 = <strong>17/12</strong>"},{q:"Calcola: (5/6) ÷ (10/3)",a:"= 5/6 × 3/10 = 15/60 = <strong>1/4</strong>"},{q:"Semplifica: 36/48",a:"M.C.D.(36,48)=12 → <strong>3/4</strong>"}]},
+{title:"Esercizi misti su numeri",tag:"esercizi",esercizi:[{q:"Ordina dal minore al maggiore: −3/2, 0.7, −0.5, 4/3",a:"Converti: −1.5, 0.7, −0.5, 1.333… → Ordine: <strong>−3/2, −0.5, 0.7, 4/3</strong>"},{q:"Calcola: (−2)³ − |−8| + (−1)⁰",a:"= −8 − 8 + 1 = <strong>−15</strong>"},{q:"Vero o falso: ogni numero intero è anche razionale?",a:"<strong>Vero.</strong> Gli interi sono un sottoinsieme dei razionali (es. 5 = 5/1)."}]}
+]},
+{title:"Potenze, radici e logaritmi",lessons:[
+{title:"Teoria: potenze e regole",tag:"teoria",teoria:`Una potenza aⁿ significa moltiplicare a per se stesso n volte.<br><br><strong>Regole fondamentali:</strong><br>• aᵐ × aⁿ = aᵐ⁺ⁿ (stessa base → somma esponenti)<br>• aᵐ ÷ aⁿ = aᵐ⁻ⁿ<br>• (aᵐ)ⁿ = aᵐˣⁿ<br>• (a×b)ⁿ = aⁿ × bⁿ<br>• a⁰ = 1 (qualsiasi a ≠ 0)<br>• a⁻ⁿ = 1/aⁿ<br>• a^(1/n) = ⁿ√a`,formule:["aᵐ × aⁿ = aᵐ⁺ⁿ","(aᵐ)ⁿ = aᵐⁿ","a⁻ⁿ = 1/aⁿ","a^(1/2) = √a"],esercizi:[{q:"Semplifica: 2³ × 2⁴ ÷ 2²",a:"= 2^(3+4−2) = 2⁵ = <strong>32</strong>"},{q:"Calcola: (3²)³",a:"= 3^(2×3) = 3⁶ = <strong>729</strong>"},{q:"Quanto vale 4^(1/2)?",a:"4^(1/2) = √4 = <strong>2</strong>"}]},
+{title:"Teoria: logaritmi",tag:"teoria",teoria:`Il logaritmo risponde alla domanda: <em>a quale potenza devo elevare la base per ottenere quel numero?</em><br><br>log_b(x) = y significa bʸ = x<br><br>Esempio: log_2(8) = 3 perché 2³ = 8<br><br><strong>Proprietà:</strong><br>• log(a×b) = log(a) + log(b)<br>• log(a/b) = log(a) − log(b)<br>• log(aⁿ) = n × log(a)<br>• log_b(b) = 1<br>• log_b(1) = 0<br><br><strong>log naturale ln:</strong> base e ≈ 2.718`,formule:["log_b(xy) = log_b(x) + log_b(y)","log_b(x/y) = log_b(x) − log_b(y)","log_b(xⁿ) = n·log_b(x)","log_b(b) = 1  |  log_b(1) = 0"],esercizi:[{q:"Calcola: log_3(81)",a:"3^? = 81 = 3⁴ → log_3(81) = <strong>4</strong>"},{q:"Semplifica: log_2(16) − log_2(4)",a:"= log_2(16/4) = log_2(4) = <strong>2</strong>"},{q:"Risolvi: 2^x = 32",a:"32 = 2⁵ → <strong>x = 5</strong>"}]}
+]},
+{title:"Polinomi e fattorizzazione",lessons:[
+{title:"Teoria: operazioni con polinomi",tag:"teoria",teoria:`Un <strong>polinomio</strong> è una somma di monomi (es. 3x² − 2x + 1).<br><br><strong>Somma/differenza:</strong> somma i termini simili (stesso grado).<br>(2x² + 3x) + (x² − x) = 3x² + 2x<br><br><strong>Prodotti notevoli da memorizzare:</strong><br>• (a+b)² = a² + 2ab + b²<br>• (a−b)² = a² − 2ab + b²<br>• (a+b)(a−b) = a² − b²<br>• (a+b)³ = a³ + 3a²b + 3ab² + b³`,formule:["(a+b)² = a² + 2ab + b²","(a−b)² = a² − 2ab + b²","(a+b)(a−b) = a² − b²"],esercizi:[{q:"Espandi: (x + 3)²",a:"= x² + 2·x·3 + 3² = <strong>x² + 6x + 9</strong>"},{q:"Espandi: (2x − 1)(2x + 1)",a:"= (2x)² − 1² = <strong>4x² − 1</strong>"},{q:"Semplifica: (x² + 4x + 4) / (x + 2)",a:"Nota: x² + 4x + 4 = (x+2)² → risultato: <strong>x + 2</strong>"}]},
+{title:"Teoria: fattorizzazione",tag:"teoria",teoria:`Fattorizzare = scrivere un polinomio come prodotto di fattori più semplici.<br><br><strong>Tecniche principali:</strong><br>1. <strong>Raccoglimento a fattor comune:</strong> 6x² + 4x = 2x(3x + 2)<br>2. <strong>Differenza di quadrati:</strong> x² − 9 = (x+3)(x−3)<br>3. <strong>Quadrato di binomio:</strong> x² + 6x + 9 = (x+3)²<br>4. <strong>Trinomio:</strong> x² + 5x + 6 = (x+2)(x+3) → cerca a,b con a+b=5, a×b=6`,formule:["x² − b² = (x+b)(x−b)","x² + (a+b)x + ab = (x+a)(x+b)"],esercizi:[{q:"Fattorizza: x² − 25",a:"= x² − 5² = <strong>(x+5)(x−5)</strong>"},{q:"Fattorizza: x² + 7x + 12",a:"Cerca a,b: a+b=7, ab=12 → a=3, b=4 → <strong>(x+3)(x+4)</strong>"},{q:"Fattorizza: 3x³ − 9x",a:"Fattor comune 3x: <strong>3x(x² − 3)</strong>"}]},
+{title:"Quiz polinomi",tag:"quiz",esercizi:[{q:"Quanto vale (a−b)² se a=5, b=2?",a:"(5−2)² = 3² = <strong>9</strong>"},{q:"Fattorizza: 4x² − 12x + 9",a:"= (2x)² − 2·2x·3 + 3² = <strong>(2x−3)²</strong>"},{q:"Moltiplica: (x+2)(x²−2x+4)",a:"= x³−2x²+4x+2x²−4x+8 = <strong>x³+8</strong> (somma di cubi)"}]}
+]},
+{title:"Equazioni e disequazioni",lessons:[
+{title:"Teoria: equazioni 1° e 2° grado",tag:"teoria",teoria:`<strong>Equazione di 1° grado:</strong> ax + b = 0 → x = −b/a<br>Esempio: 3x − 6 = 0 → x = 2<br><br><strong>Equazione di 2° grado:</strong> ax² + bx + c = 0<br><strong>Formula risolutiva (quadratica):</strong><br>x = (−b ± √(b²−4ac)) / 2a<br><br><strong>Discriminante Δ = b²−4ac:</strong><br>• Δ > 0 → 2 soluzioni reali distinte<br>• Δ = 0 → 1 soluzione doppia: x = −b/2a<br>• Δ < 0 → nessuna soluzione reale`,formule:["x = (−b ± √Δ) / 2a","Δ = b² − 4ac","Formule di Viète: x₁+x₂ = −b/a  |  x₁·x₂ = c/a"],esercizi:[{q:"Risolvi: 2x² − 5x + 3 = 0",a:"Δ = 25−24 = 1 → x = (5±1)/4 → <strong>x₁=3/2, x₂=1</strong>"},{q:"Risolvi: x² − 4 = 0",a:"x² = 4 → <strong>x = ±2</strong>"},{q:"Quante soluzioni ha x² + x + 1 = 0?",a:"Δ = 1−4 = −3 < 0 → <strong>nessuna soluzione reale</strong>"}]},
+{title:"Teoria: disequazioni",tag:"teoria",teoria:`Risolvere una disequazione significa trovare l'intervallo di valori che la soddisfa.<br><br><strong>1° grado:</strong> come equazioni ma con ≤ ≥ < ><br>⚠️ Se moltiplichi/dividi per un numero <strong>negativo</strong>, il verso si inverte!<br><br><strong>2° grado ax²+bx+c > 0:</strong><br>Se Δ>0, trova le radici x₁ < x₂ (con formula)<br>• Se a>0: soluzione è x<x₁ oppure x>x₂ (archi esterni, forma a "U")<br>• Se a>0 e vuoi ax²+bx+c < 0: x₁ < x < x₂ (arco interno)`,formule:["ax+b > 0 → x > −b/a (se a>0)","ax²+bx+c > 0 con a>0, Δ>0 → x<x₁ ∪ x>x₂"],esercizi:[{q:"Risolvi: 2x − 6 > 0",a:"2x > 6 → <strong>x > 3</strong>"},{q:"Risolvi: −3x + 9 ≤ 0",a:"−3x ≤ −9 → dividi per −3 (inverti): <strong>x ≥ 3</strong>"},{q:"Risolvi: x² − 4 > 0",a:"radici: x=±2 → con a=1>0, soluzione esterna: <strong>x<−2 ∪ x>2</strong>"}]},
+{title:"Sistemi di equazioni",tag:"teoria",teoria:`Un sistema di equazioni chiede valori che soddisfino tutte le equazioni contemporaneamente.<br><br><strong>Metodo di sostituzione:</strong> ricava x dalla prima, sostituisci nella seconda.<br><strong>Metodo di addizione:</strong> moltiplica le equazioni per annullare una variabile.<br><br>Esempio:<br>{ x + y = 5<br>{ x − y = 1<br>Somma: 2x = 6 → x = 3 → y = 2`,formule:["Gauss: moltiplica e somma le equazioni per eliminare una variabile"],esercizi:[{q:"Risolvi: { 2x + y = 7 | x − y = 2",a:"Somma: 3x = 9 → x=3 → y=1 → <strong>(3, 1)</strong>"},{q:"Risolvi: { x + 2y = 5 | 3x − y = 1",a:"Dalla 1ª: x=5−2y → nella 2ª: 3(5−2y)−y=1 → 15−7y=1 → y=2, x=1 → <strong>(1, 2)</strong>"}]},
+{title:"Quiz equazioni e disequazioni",tag:"quiz",esercizi:[{q:"Risolvi: (x−2)(x+3) = 0",a:"Prodotto = 0 → <strong>x=2 oppure x=−3</strong>"},{q:"Risolvi: |2x−1| = 5",a:"2x−1=5 → x=3  oppure  2x−1=−5 → x=−2 → <strong>x=3 o x=−2</strong>"},{q:"Per quali x vale x² ≤ 9?",a:"x²−9 ≤ 0 → (x−3)(x+3) ≤ 0 → <strong>−3 ≤ x ≤ 3</strong>"}]}
+]}
+]},
+{name:"Geometria",modules:[
+{title:"Geometria piana",lessons:[
+{title:"Teoria: figure piane fondamentali",tag:"teoria",teoria:`<strong>Triangoli:</strong><br>• Somma angoli interni = 180°<br>• Area = (base × altezza) / 2<br>• Pitagora (rettangolo): a² + b² = c² (c=ipotenusa)<br><br><strong>Quadrilateri:</strong><br>• Rettangolo: A = base × altezza<br>• Quadrato: A = lato²<br>• Parallelogramma: A = base × altezza<br>• Trapezio: A = (b₁+b₂)/2 × altezza<br><br><strong>Cerchio:</strong> Area = πr², Circonferenza = 2πr`,formule:["Pitagora: c² = a² + b²","Cerchio: A = πr²  |  C = 2πr","Trapezio: A = (b₁+b₂)/2 × h"],esercizi:[{q:"Un triangolo rettangolo ha cateti 3 e 4. Quanto misura l'ipotenusa?",a:"c² = 9+16 = 25 → c = <strong>5</strong>"},{q:"Area di un trapezio con basi 6 e 10, altezza 4?",a:"A = (6+10)/2 × 4 = 8 × 4 = <strong>32</strong>"},{q:"Circonferenza di un cerchio con r=7?",a:"C = 2π×7 = <strong>14π ≈ 43.98</strong>"}]},
+{title:"Esercizi geometria piana",tag:"esercizi",esercizi:[{q:"Un quadrato ha area 49. Quanto misura il lato? E il perimetro?",a:"lato = √49 = 7 → perimetro = <strong>4×7 = 28</strong>"},{q:"In un triangolo isoscele, i due angoli uguali sono 70°. Quanto è il terzo angolo?",a:"180° − 70° − 70° = <strong>40°</strong>"},{q:"Un cerchio ha area 25π. Quanto è il raggio?",a:"πr² = 25π → r² = 25 → r = <strong>5</strong>"}]}
+]},
+{title:"Geometria analitica",lessons:[
+{title:"Teoria: rette nel piano cartesiano",tag:"teoria",teoria:`Ogni retta si scrive come <strong>y = mx + q</strong><br>• m = pendenza (coefficiente angolare) = Δy/Δx<br>• q = intercetta (punto dove taglia l'asse y)<br><br><strong>Rette parallele:</strong> stessa pendenza m, q diversa<br><strong>Rette perpendicolari:</strong> m₁ × m₂ = −1<br><br><strong>Distanza tra due punti:</strong> d = √[(x₂−x₁)² + (y₂−y₁)²]<br><strong>Punto medio:</strong> M = ((x₁+x₂)/2, (y₁+y₂)/2)`,formule:["y = mx + q","m = (y₂−y₁)/(x₂−x₁)","d = √[(x₂−x₁)² + (y₂−y₁)²]","M = ((x₁+x₂)/2, (y₁+y₂)/2)"],esercizi:[{q:"Che pendenza ha la retta che passa per (1,2) e (3,6)?",a:"m = (6−2)/(3−1) = 4/2 = <strong>2</strong>"},{q:"Distanza tra (0,0) e (3,4)?",a:"d = √(9+16) = √25 = <strong>5</strong>"},{q:"Una retta ha pendenza 2. Quale pendenza ha la perpendicolare?",a:"m₁×m₂=−1 → 2×m₂=−1 → m₂ = <strong>−1/2</strong>"}]},
+{title:"Teoria: parabola e circonferenza",tag:"teoria",teoria:`<strong>Parabola:</strong> y = ax² + bx + c<br>• Vertice: x_v = −b/(2a), y_v = f(x_v)<br>• Se a>0: parabola aperta verso l'alto (minimo)<br>• Se a<0: parabola aperta verso il basso (massimo)<br><br><strong>Circonferenza:</strong> (x−h)² + (y−k)² = r²<br>• Centro: (h,k), Raggio: r<br>• Forma generale: x²+y²+Dx+Ey+F=0`,formule:["Vertice parabola: x_v = −b/2a","Circonferenza: (x−h)² + (y−k)² = r²"],esercizi:[{q:"Trova il vertice di y = x² − 4x + 3",a:"x_v = −(−4)/(2×1) = 2 → y_v = 4−8+3 = −1 → vertice: <strong>(2, −1)</strong>"},{q:"Qual è il centro e raggio di (x−2)² + (y+1)² = 9?",a:"Centro: <strong>(2, −1)</strong>, Raggio: <strong>3</strong>"}]}
+]},
+{title:"Trigonometria",lessons:[
+{title:"Teoria: seno, coseno, tangente",tag:"teoria",teoria:`In un triangolo rettangolo con angolo α:<br>• <strong>sin(α)</strong> = cateto opposto / ipotenusa<br>• <strong>cos(α)</strong> = cateto adiacente / ipotenusa<br>• <strong>tan(α)</strong> = cateto opposto / cateto adiacente = sin/cos<br><br><strong>Valori da memorizzare:</strong><br>α: 0° | 30° | 45° | 60° | 90°<br>sin: 0 | 1/2 | √2/2 | √3/2 | 1<br>cos: 1 | √3/2 | √2/2 | 1/2 | 0<br><br><strong>Identità fondamentale:</strong> sin²α + cos²α = 1`,formule:["sin²α + cos²α = 1","tan α = sin α / cos α","sin(30°)=1/2, cos(30°)=√3/2","sin(45°)=cos(45°)=√2/2","sin(60°)=√3/2, cos(60°)=1/2"],esercizi:[{q:"In un triangolo rettangolo, ipotenusa=10, angolo=30°. Quanto vale il cateto opposto?",a:"cateto = 10 × sin(30°) = 10 × 1/2 = <strong>5</strong>"},{q:"Calcola: sin²(60°) + cos²(60°)",a:"= 3/4 + 1/4 = <strong>1</strong> (sempre vero per identità fondamentale)"},{q:"Quanto vale tan(45°)?",a:"sin(45°)/cos(45°) = (√2/2)/(√2/2) = <strong>1</strong>"}]},
+{title:"Quiz trigonometria",tag:"quiz",esercizi:[{q:"Risolvi: sin(x) = 1/2 per x in [0°,360°]",a:"x = 30° oppure x = 150° → <strong>x = 30°, 150°</strong>"},{q:"Se cos(α) = 3/5, quanto vale sin(α)? (primo quadrante)",a:"sin²α = 1 − 9/25 = 16/25 → sin(α) = <strong>4/5</strong>"},{q:"Un triangolo ha angoli 45°, 45°, 90° e ipotenusa √2. Quanto valgono i cateti?",a:"cateto = √2 × sin(45°) = √2 × √2/2 = <strong>1</strong>"}]}
+]}
+]},
+{name:"Funzioni & Statistica",modules:[
+{title:"Funzioni: dominio, grafici, trasformazioni",lessons:[
+{title:"Teoria: funzioni fondamentali",tag:"teoria",teoria:`Una <strong>funzione</strong> associa a ogni x un unico y.<br><br><strong>Famiglie da conoscere:</strong><br>• Lineare: y = mx+q (retta)<br>• Quadratica: y = ax²+bx+c (parabola)<br>• Valore assoluto: y = |x| (a V)<br>• Radice: y = √x (solo x≥0)<br>• Esponenziale: y = aˣ (sempre >0)<br>• Logaritmica: y = log(x) (solo x>0)<br><br><strong>Dominio:</strong> valori di x per cui la funzione è definita.<br>• Fratta: escludi x che azzerano il denominatore<br>• Con radice: imponi l'argomento ≥ 0`,formule:["Dominio di √f(x): f(x) ≥ 0","Dominio di 1/f(x): f(x) ≠ 0","Dominio di log(f(x)): f(x) > 0"],esercizi:[{q:"Qual è il dominio di f(x) = √(x−3)?",a:"x−3 ≥ 0 → <strong>x ≥ 3</strong>"},{q:"Qual è il dominio di f(x) = 1/(x²−4)?",a:"x²−4 ≠ 0 → x≠±2 → <strong>ℝ \\ {−2, 2}</strong>"},{q:"La funzione y=2ˣ passa per il punto (0, ?) e (1, ?)",a:"x=0: y=2⁰=1 → (0,1); x=1: y=2¹=2 → <strong>(0,1) e (1,2)</strong>"}]}
+]},
+{title:"Statistica e probabilità",lessons:[
+{title:"Teoria: indici statistici",tag:"teoria",teoria:`<strong>Media aritmetica:</strong> somma dei valori / numero dei valori<br>Dati: 2, 4, 6, 8 → media = 20/4 = 5<br><br><strong>Mediana:</strong> valore centrale dopo aver ordinato i dati<br>Dati ordinati: 1,3,5,7,9 → mediana = 5<br>Se pari numero: media dei due centrali<br><br><strong>Moda:</strong> il valore che appare più spesso<br>1,2,2,3,4 → moda = 2<br><br><strong>Probabilità:</strong> P(evento) = casi favorevoli / casi totali<br>P sempre tra 0 e 1. P(A)+P(non A)=1`,formule:["Media = Σxᵢ / n","P(A) = casi favorevoli / casi totali","P(A) + P(Ā) = 1"],esercizi:[{q:"Dati: 3, 7, 5, 9, 1. Calcola media e mediana.",a:"Media=(3+7+5+9+1)/5=25/5=5. Ordine:1,3,5,7,9 → Mediana=<strong>5</strong>"},{q:"Lancio un dado: probabilità di ottenere un numero pari?",a:"Pari={2,4,6}, totale=6 → P = 3/6 = <strong>1/2</strong>"},{q:"Ho 4 palline rosse e 6 blu. Probabilità di estrarne una rossa?",a:"P = 4/10 = <strong>2/5 = 0.4</strong>"}]},
+{title:"Simulazione Matematica",tag:"sim",esercizi:[{q:"[SIM 1] Quale dei seguenti è il dominio di f(x) = log(x²−1)?",a:"x²−1>0 → x²>1 → <strong>x<−1 ∪ x>1</strong>"},{q:"[SIM 2] Risolvi il sistema: 2x−y=3, x+2y=4",a:"Dalla 1ª: y=2x−3 → nella 2ª: x+2(2x−3)=4 → 5x=10 → x=2, y=1 → <strong>(2,1)</strong>"},{q:"[SIM 3] Trova le intersezioni di y=x² e y=x+2",a:"x²=x+2 → x²−x−2=0 → (x−2)(x+1)=0 → <strong>x=2 (y=4) e x=−1 (y=1)</strong>"},{q:"[SIM 4] Due angoli supplementari sono in rapporto 2:1. Quanto misurano?",a:"2k+k=180° → k=60° → <strong>angoli: 120° e 60°</strong>"},{q:"[SIM 5] log_4(64) = ?",a:"4^? = 64 = 4³ → <strong>log_4(64) = 3</strong>"}]}
+]}
+]}
+]},
+{id:"f2",title:"Fase 2 — Scienze",date:"7 → 27 Lug",color:"var(--science)",cat:"science",tip:"<strong>Fisica prima di tutto:</strong> vale circa il 70% delle domande di scienze. Studia la fisica con priorità, poi la chimica.",subjects:[
+{name:"Fisica",modules:[
+{title:"Cinematica: il moto",lessons:[
+{title:"Teoria: tipi di moto",tag:"teoria",teoria:`<strong>Grandezze:</strong> posizione (m), velocità (m/s), accelerazione (m/s²), tempo (s)<br><br><strong>MRU (Moto Rettilineo Uniforme):</strong><br>velocità costante, accelerazione = 0<br>Spazio: s = v × t<br><br><strong>MRUA (Moto Ret. Unif. Accelerato):</strong><br>accelerazione costante a<br>v(t) = v₀ + a×t<br>s(t) = v₀t + ½at²<br>v² = v₀² + 2as<br><br><strong>Caduta libera:</strong> a = g = 9.8 m/s² verso il basso<br>Da fermo: v = g×t, s = ½g×t²`,formule:["MRU: s = v·t","MRUA: v = v₀ + at","MRUA: s = v₀t + ½at²","MRUA: v² = v₀² + 2as","Caduta libera: s = ½gt² (g≈10 m/s²)"],esercizi:[{q:"Un'auto va a 20 m/s per 10 s. Quanti metri percorre?",a:"s = 20×10 = <strong>200 m</strong>"},{q:"Un oggetto parte da fermo con a=3 m/s². Dopo 4 s, a che velocità va?",a:"v = 0 + 3×4 = <strong>12 m/s</strong>"},{q:"Dalla torre di Pisa (h≈55 m) si lascia cadere una palla. Dopo quanti secondi tocca terra? (g=10)",a:"55 = ½×10×t² → t² = 11 → t ≈ <strong>3.3 s</strong>"}]}
+]},
+{title:"Forze ed energia",lessons:[
+{title:"Teoria: leggi di Newton",tag:"teoria",teoria:`<strong>1ª legge (Inerzia):</strong> un corpo rimane in stato di quiete o moto rettilineo uniforme se la forza risultante è zero.<br><br><strong>2ª legge (F=ma):</strong> la forza netta su un corpo = massa × accelerazione<br>F = ma (unità: Newton = kg·m/s²)<br><br><strong>3ª legge (Azione-Reazione):</strong> per ogni forza c'è una forza uguale e contraria.<br><br><strong>Peso:</strong> P = m×g (forza con cui la Terra attira il corpo)<br><strong>Attrito:</strong> F_a = μ × N (μ=coeff. attrito, N=forza normale)`,formule:["F = m·a","Peso: P = m·g (g≈9.8 m/s²)","Attrito: Fₐ = μ·N"],esercizi:[{q:"Una massa di 5 kg è soggetta a F=20 N. Quale accelerazione acquista?",a:"a = F/m = 20/5 = <strong>4 m/s²</strong>"},{q:"Qual è il peso di un oggetto da 10 kg? (g=10)",a:"P = 10×10 = <strong>100 N</strong>"},{q:"Un corpo è in equilibrio su un piano. La normale è 50 N, μ=0.3. Quanto è l'attrito massimo?",a:"Fₐ = 0.3×50 = <strong>15 N</strong>"}]},
+{title:"Teoria: lavoro ed energia",tag:"teoria",teoria:`<strong>Lavoro:</strong> W = F × d × cos(θ) [Joule = J]<br>θ è l'angolo tra forza e spostamento.<br>Se F parallela allo spostamento: W = F×d<br><br><strong>Energia cinetica:</strong> Ec = ½mv²<br><strong>Energia potenziale gravitazionale:</strong> Ep = mgh<br><strong>Conservazione energia meccanica:</strong> Ec + Ep = costante (in assenza di attrito)<br><br><strong>Potenza:</strong> P = W/t [Watt = W = J/s]`,formule:["W = F·d·cos θ","Ec = ½mv²","Ep = mgh","Conservazione: Ec₁ + Ep₁ = Ec₂ + Ep₂","P = W/t"],esercizi:[{q:"Una forza di 10 N sposta un oggetto di 5 m nella stessa direzione. Lavoro compiuto?",a:"W = 10×5×cos0° = <strong>50 J</strong>"},{q:"Un oggetto di 2 kg si muove a 3 m/s. Energia cinetica?",a:"Ec = ½×2×9 = <strong>9 J</strong>"},{q:"Una palla di 1 kg è a 5 m di altezza. Energia potenziale? (g=10)",a:"Ep = 1×10×5 = <strong>50 J</strong>"}]}
+]},
+{title:"Termodinamica",lessons:[
+{title:"Teoria: calore e gas",tag:"teoria",teoria:`<strong>Temperatura</strong> si misura in °C o Kelvin: K = °C + 273<br><br><strong>Calore Q</strong> [Joule]: Q = m × c × ΔT (c = calore specifico)<br><br><strong>Gas ideale:</strong> PV = nRT<br>P=pressione, V=volume, n=moli, R=8.31, T=Kelvin<br><br><strong>Leggi dei gas (quantità fissa):</strong><br>• Boyle (T cost.): P₁V₁ = P₂V₂<br>• Charles (P cost.): V₁/T₁ = V₂/T₂<br>• Gay-Lussac (V cost.): P₁/T₁ = P₂/T₂`,formule:["T(K) = T(°C) + 273","Q = m·c·ΔT","Gas ideale: PV = nRT","Boyle: P₁V₁ = P₂V₂ (T cost.)","Charles: V/T = cost. (P cost.)"],esercizi:[{q:"Un gas ha P=2 atm, V=3 L. A T costante, se V diventa 6 L, che pressione ha?",a:"P₁V₁=P₂V₂ → 2×3=P₂×6 → P₂ = <strong>1 atm</strong>"},{q:"Converti 100°C in Kelvin.",a:"K = 100+273 = <strong>373 K</strong>"},{q:"Quanto calore serve per scaldare 2 kg d'acqua di 10°C? (c_acqua=4200 J/kg°C)",a:"Q = 2×4200×10 = <strong>84000 J = 84 kJ</strong>"}]}
+]},
+{title:"Onde ed elettricità",lessons:[
+{title:"Teoria: onde",tag:"teoria",teoria:`<strong>Parametri di un'onda:</strong><br>• Lunghezza d'onda λ (m)<br>• Frequenza f (Hz = 1/s)<br>• Velocità v (m/s)<br>• Relazione fondamentale: v = f × λ<br><br><strong>Suono:</strong> onda meccanica, v≈340 m/s in aria<br><strong>Luce:</strong> onda elettromagnetica, c=3×10⁸ m/s nel vuoto<br><br><strong>Ottica:</strong> riflessione (angolo incidenza = angolo riflessione), rifrazione (Snell: n₁sinθ₁ = n₂sinθ₂)`,formule:["v = f·λ","Snell: n₁·sin(θ₁) = n₂·sin(θ₂)","Luce nel vuoto: c = 3×10⁸ m/s"],esercizi:[{q:"Un'onda ha f=500 Hz e v=340 m/s. Qual è la lunghezza d'onda?",a:"λ = v/f = 340/500 = <strong>0.68 m</strong>"},{q:"Un raggio di luce passa dall'aria (n=1) al vetro (n=1.5) con θ₁=30°. Trova θ₂.",a:"1×sin30° = 1.5×sinθ₂ → sinθ₂=0.5/1.5=1/3 → θ₂≈<strong>19.5°</strong>"}]},
+{title:"Teoria: elettricità base",tag:"teoria",teoria:`<strong>Corrente elettrica I</strong> [Ampere A]: flusso di cariche<br><strong>Tensione V</strong> [Volt V]: differenza di potenziale<br><strong>Resistenza R</strong> [Ohm Ω]<br><br><strong>Legge di Ohm:</strong> V = R × I<br><br><strong>Resistori in serie:</strong> R_tot = R₁ + R₂ + …<br><strong>Resistori in parallelo:</strong> 1/R_tot = 1/R₁ + 1/R₂ + …<br><br><strong>Potenza elettrica:</strong> P = V × I = R × I²`,formule:["Ohm: V = R·I","Serie: R_tot = R₁+R₂","Parallelo: 1/R_tot = 1/R₁+1/R₂","Potenza: P = V·I"],esercizi:[{q:"Una resistenza da 10 Ω è collegata a 5 V. Che corrente scorre?",a:"I = V/R = 5/10 = <strong>0.5 A</strong>"},{q:"Due resistenze da 4 Ω e 6 Ω in serie. Resistenza totale?",a:"R_tot = 4+6 = <strong>10 Ω</strong>"},{q:"Le stesse due (4 Ω e 6 Ω) in parallelo. Resistenza totale?",a:"1/R = 1/4+1/6 = 5/12 → R = <strong>12/5 = 2.4 Ω</strong>"}]},
+{title:"Simulazione Scienze",tag:"sim",esercizi:[{q:"[SIM 1] Un'auto frena da 30 m/s a 0 in 6 s. Qual è la decelerazione?",a:"a = Δv/Δt = (0−30)/6 = <strong>−5 m/s²</strong>"},{q:"[SIM 2] Un gas a 300 K e 1 atm viene riscaldato a 600 K a volume costante. Nuova pressione?",a:"P₁/T₁=P₂/T₂ → 1/300=P₂/600 → P₂ = <strong>2 atm</strong>"},{q:"[SIM 3] Un corpo di 3 kg cade da 20 m. A che velocità arriva a terra? (g=10, no attrito)",a:"Energia: mgh=½mv² → v=√(2gh)=√(400) = <strong>20 m/s</strong>"},{q:"[SIM 4] Due cariche hanno forza F a distanza d. Se la distanza raddoppia, la forza diventa?",a:"Coulomb: F ∝ 1/d² → d×2 → F diventa <strong>F/4</strong>"}]}
+]}
+]},
+{name:"Chimica",modules:[
+{title:"Atomo e tavola periodica",lessons:[
+{title:"Teoria: struttura atomica",tag:"teoria",teoria:`<strong>Atomo</strong> = nucleo (protoni + neutroni) + elettroni intorno<br><br>• <strong>Numero atomico Z</strong> = numero di protoni (identifica l'elemento)<br>• <strong>Numero di massa A</strong> = protoni + neutroni<br>• Neutroni = A − Z<br>• In atomo neutro: elettroni = protoni<br><br><strong>Tavola periodica:</strong><br>• Periodi (righe): stessi gusci elettronici<br>• Gruppi (colonne): stesse proprietà chimiche<br>• Metalli (sinistra), non-metalli (destra), semimetalli (diagonale)`,formule:["Neutroni = A − Z","Ione positivo (catione): perde elettroni","Ione negativo (anione): acquista elettroni"],esercizi:[{q:"Il carbonio ha Z=6, A=12. Quanti neutroni ha?",a:"Neutroni = 12−6 = <strong>6</strong>"},{q:"Un atomo di Na (Z=11) perde 1 elettrone. Che carica ha?",a:"Diventa Na⁺, <strong>catione con carica +1</strong>"},{q:"Dove si trovano i gas nobili nella tavola periodica?",a:"<strong>Gruppo 18</strong> (colonna più a destra)"}]}
+]},
+{title:"Legami e reazioni chimiche",lessons:[
+{title:"Teoria: legami e moli",tag:"teoria",teoria:`<strong>Legami chimici:</strong><br>• <strong>Ionico:</strong> trasferimento di e⁻ (metallo+non-metallo, es. NaCl)<br>• <strong>Covalente:</strong> condivisione di e⁻ (non-metallo+non-metallo, es. H₂O)<br>• <strong>Metallico:</strong> e⁻ liberi (metalli puri)<br><br><strong>Mole:</strong> 6.022×10²³ particelle (numero di Avogadro N_A)<br>Massa molare M = massa in grammi di 1 mole<br>n (moli) = massa (g) / M (g/mol)<br><br><strong>Bilanciamento:</strong> gli atomi si conservano → il numero di atomi di ogni elemento deve essere uguale a destra e sinistra.`,formule:["n = m / M  (n=moli, m=massa in g, M=massa molare)","N_A = 6.022×10²³","Reazione bilanciata: atomi conservati"],esercizi:[{q:"Quante moli ci sono in 36 g di acqua? (M_H₂O = 18 g/mol)",a:"n = 36/18 = <strong>2 moli</strong>"},{q:"Bilancia: H₂ + O₂ → H₂O",a:"<strong>2H₂ + O₂ → 2H₂O</strong>"},{q:"NaCl è un legame ionico o covalente?",a:"<strong>Ionico</strong> (Na è metallo, Cl è non-metallo)"}]},
+{title:"Acidi, basi e pH",tag:"teoria",teoria:`<strong>Acidi:</strong> donano H⁺ in soluzione (es. HCl, H₂SO₄)<br><strong>Basi:</strong> accettano H⁺ / donano OH⁻ (es. NaOH)<br><br><strong>pH = −log[H⁺]</strong><br>• pH < 7 → acido<br>• pH = 7 → neutro (acqua pura)<br>• pH > 7 → basico (alcalino)<br><br><strong>Neutralizzazione:</strong> acido + base → sale + acqua<br>HCl + NaOH → NaCl + H₂O`,formule:["pH = −log[H⁺]","pH + pOH = 14","Neutralizzazione: acido + base → sale + H₂O"],esercizi:[{q:"Una soluzione ha [H⁺]=10⁻³ mol/L. Qual è il pH?",a:"pH = −log(10⁻³) = <strong>3</strong> (acido)"},{q:"pH = 11: acido, neutro o basico?",a:"pH > 7 → <strong>basico</strong>"},{q:"Quali prodotti si formano da H₂SO₄ + 2NaOH?",a:"<strong>Na₂SO₄ + 2H₂O</strong>"}]}
+]}
+]}
+]},
+{id:"f3",title:"Fase 3 — Logica & Comprensione verbale",date:"28 Lug → 17 Ago",color:"var(--logic)",cat:"logic",tip:"<strong>Nessuna teoria da memorizzare.</strong> Allena il ragionamento con tanti esempi. Per la comprensione verbale: leggi la domanda PRIMA del testo.",subjects:[
+{name:"Ragionamento Logico",modules:[
+{title:"Serie numeriche",lessons:[
+{title:"Teoria: riconoscere pattern",tag:"teoria",teoria:`Una serie numerica segue sempre una regola. Devi trovarla.<br><br><strong>Tipi comuni:</strong><br>• Aritmetica: aggiungi sempre lo stesso numero (2, 5, 8, 11…) → +3<br>• Geometrica: moltiplica sempre per lo stesso (2, 6, 18, 54…) → ×3<br>• Quadrati/cubi: 1, 4, 9, 16, 25… (n²)<br>• Fibonacci: ogni termine = somma dei due precedenti (1,1,2,3,5,8…)<br>• Alternata: due regole che si alternano (2,6,4,12,6,18…)<br><br><strong>Strategia:</strong> calcola le differenze tra termini consecutivi. Se le differenze sono costanti → aritmetica. Se le differenze crescono → prova divisioni.`,formule:["Serie aritm.: aₙ = a₁ + (n−1)d","Serie geom.: aₙ = a₁ × rⁿ⁻¹"],esercizi:[{q:"Trova il prossimo: 3, 7, 11, 15, ?",a:"Differenza +4 → <strong>19</strong>"},{q:"Trova il prossimo: 2, 6, 18, 54, ?",a:"Rapporto ×3 → <strong>162</strong>"},{q:"Trova il prossimo: 1, 4, 9, 16, ?",a:"Quadrati (n²): 1²,2²,3²,4² → <strong>25 (5²)</strong>"},{q:"Trova il prossimo: 1, 1, 2, 3, 5, 8, ?",a:"Fibonacci: ogni termine = somma dei due precedenti → <strong>13</strong>"},{q:"Trova il prossimo: 3, 6, 5, 10, 9, 18, 17, ?",a:"Alternanza: ×2, −1, ×2, −1… → 17×2 = <strong>34</strong>"}]}
+]},
+{title:"Sillogismi e deduzione",lessons:[
+{title:"Teoria: ragionamento logico formale",tag:"teoria",teoria:`<strong>Sillogismo:</strong> da due premesse si trae una conclusione.<br>Premessa 1: Tutti i cani sono animali.<br>Premessa 2: Rex è un cane.<br>Conclusione: Rex è un animale. ✓<br><br><strong>Attenzione alle trappole:</strong><br>• "Alcuni A sono B" ≠ "Tutti A sono B"<br>• "Nessun A è B" → "Nessun B è A" (è simmetrica)<br>• Non confondere la direzione: "Se piove → prenditi l'ombrello" NON implica "se prendo l'ombrello → piove"<br><br><strong>Contrapposizione (valida):</strong> "Se A → B" equivale a "Se non B → non A"`,formule:["Se A→B e B→C, allora A→C (transitività)","Se A→B, allora ¬B→¬A (contrapposizione)","¬(A e B) = ¬A o ¬B (De Morgan)"],esercizi:[{q:"Tutti gli studenti di ingegneria studiano matematica. Marco studia matematica. Marco è uno studente di ingegneria?",a:"<strong>Non necessariamente.</strong> Matematica la possono studiare anche altri (errore logico comune)."},{q:"Nessun pesce può volare. Il salmone è un pesce. Conclusione?",a:"<strong>Il salmone non può volare.</strong> ✓"},{q:"Se ha studiato, allora supera l'esame. Non supera l'esame. Conclusione?",a:"Per contrapposizione: <strong>non ha studiato.</strong> ✓"}]}
+]},
+{title:"Problemi logici e insiemi",lessons:[
+{title:"Esercizi: problemi di ragionamento",tag:"esercizi",esercizi:[{q:"In una gara, Anna arriva prima di Luca. Luca arriva prima di Marco. Chi arriva ultimo?",a:"Anna > Luca > Marco → <strong>Marco</strong>"},{q:"Tutti i rossi sono grandi. Alcune cose grandi sono pesanti. Possiamo concludere che alcuni rossi sono pesanti?",a:"<strong>Non necessariamente</strong> — i rossi grandi potrebbero essere proprio quelli che non sono pesanti."},{q:"In una classe di 30, 18 studiano inglese, 15 francese e 8 entrambe. Quanti non studiano nessuna delle due?",a:"Inglese ∪ Francese = 18+15−8 = 25 → nessuna delle due = 30−25 = <strong>5</strong>"},{q:"Tre fratelli hanno rispettivamente 2, 3 e 5 anni in più l'uno dell'altro. Il maggiore ha 20 anni. Quanti anni ha il minore?",a:"20 − 3 − 5 = <strong>12 anni</strong>"},{q:"Se LUNA si codifica OXSF, come si codifica SOLE?",a:"L→O(+3), U→X(+3), N→S(+5?). Controlla: L=12→O=15(+3), U=21→X=24(+3), N=14→S=19(+5). Non è costante — prova +3: S=19→V, O=15→R, L=12→O, E=5→H → <strong>VROH</strong> (schema +3)"}]},
+{title:"Simulazione Logica",tag:"sim",esercizi:[{q:"[SIM 1] Serie: 2, 3, 5, 8, 13, 21, ?",a:"Fibonacci → <strong>34</strong>"},{q:"[SIM 2] Tutti i pianeti orbitano attorno a una stella. La Terra orbita attorno al Sole. Conclusione valida?",a:"Sì: <strong>la Terra è un pianeta</strong> (se si assume che 'orbitare attorno a una stella' sia condizione sufficiente)."},{q:"[SIM 3] 100 persone: 60 parlano inglese, 50 francese, 30 entrambe. Quante non parlano nessuna?",a:"60+50−30=80 → 100−80 = <strong>20 persone</strong>"},{q:"[SIM 4] Trova il prossimo: 1, 8, 27, 64, ?",a:"Cubi: 1³, 2³, 3³, 4³ → <strong>125 (5³)</strong>"}]}
+]}
+]},
+{name:"Comprensione Verbale",modules:[
+{title:"Tecniche di lettura e analogie",lessons:[
+{title:"Teoria: come affrontare la comprensione verbale",tag:"teoria",teoria:`<strong>Tipologie di domande:</strong><br>1. Comprensione del testo: "Cosa afferma l'autore riguardo a…?"<br>2. Inferenze: "Quale conclusione si può trarre?"<br>3. Analogie verbali: "Caldo : Freddo = Luce : ?"<br>4. Significato di parole dal contesto<br><br><strong>Strategia per i testi:</strong><br>1. Leggi prima la domanda<br>2. Scorri il testo cercando l'informazione rilevante<br>3. La risposta corretta spesso parafrasava il testo, non lo cita letteralmente<br>4. Diffida delle risposte che vanno "oltre" quello che dice il testo<br><br><strong>Analogie verbali:</strong> trova la relazione tra le prime due parole e applicala.<br>Caldo:Freddo = Giorno:Notte → entrambe coppie di <em>opposti</em>`,formule:["Analogia: A:B = C:D → trova la stessa relazione","Inferenza: basati solo su quanto detto nel testo"],esercizi:[{q:"LIBRO : BIBLIOTECA = QUADRO : ?",a:"Un libro sta in una biblioteca, un quadro sta in un <strong>museo</strong>."},{q:"MEDICO : OSPEDALE = CUOCO : ?",a:"Il medico lavora in ospedale, il cuoco lavora in <strong>cucina / ristorante</strong>."},{q:"ACQUA : SETE = CIBO : ?",a:"L'acqua placa la sete, il cibo placa la <strong>fame</strong>."},{q:"PAGINA : LIBRO = MATTONE : ?",a:"La pagina è parte del libro, il mattone è parte del <strong>muro / edificio</strong>."}]},
+{title:"Simulazione Verbale",tag:"sim",esercizi:[{q:"[SIM] SILENZIO : RUMORE = IMMOBILITÀ : ?",a:"Contrari → <strong>MOVIMENTO</strong>"},{q:"[SIM] PITTORE : PENNELLO = SCRITTORE : ?",a:"Strumento del mestiere → <strong>PENNA / TASTIERA</strong>"},{q:"[SIM] Testo: 'Le energie rinnovabili crescono ma restano sotto il 30% del mix energetico mondiale.' Quale conclusione si può trarre?",a:"<strong>Le energie non rinnovabili rappresentano ancora oltre il 70% del mix energetico.</strong> (diretto dal testo)"}]}
+]}
+]}
+]},
+{id:"f4",title:"Fase 4 — Sprint finale",date:"18 Ago → Set",color:"var(--sim)",cat:"sim",tip:"<strong>Nessun materiale nuovo.</strong> Solo simulazioni, analisi errori, ripasso flash. L'ultima settimana: riposa bene la sera prima del test.",subjects:[
+{name:"Simulazioni complete TOLC-I",modules:[
+{title:"Simulazione 1 — Prima settimana",lessons:[
+{title:"Simulazione completa a tempo (110 min)",tag:"sim",esercizi:[{q:"Come fare la simulazione in modo efficace",a:"1. Metti un timer da 50 min per matematica, poi 20 min per scienze, 20 min per logica, 20 min per verbale.\n2. Non saltare sezioni.\n3. Scrivi su carta le domande che hai lasciato in bianco o su cui hai dubitato.\n4. Alla fine: conta risposte giuste (×1), sbagliate (×−0.25), vuote (×0)."},{q:"Ripasso post-simulazione: cosa fare",a:"1. Rivedi SOLO le domande sbagliate.\n2. Per ogni errore: capisci il concetto (non solo la risposta).\n3. Segnati l'argomento in un foglio 'punti deboli'.\n4. Il giorno dopo: fai 10 esercizi su quegli argomenti deboli."}]}
+]},
+{title:"Simulazione 2 — Seconda settimana",lessons:[
+{title:"Simulazione completa + confronto",tag:"sim",esercizi:[{q:"Strategia di timing per il TOLC-I",a:"Matematica (50 min, 20 domande): hai 2.5 min per domanda. Se una ti blocca dopo 2 min → salta.\nScienze (20 min, 10 domande): 2 min a domanda.\nLogica (20 min, 10 domande): 2 min a domanda.\nVerbale (20 min, 10 domande): 2 min a domanda."},{q:"Quando rispondo e quando lascio in bianco?",a:"Regola pratica: rispondi se sei SICURO al 70%+. Se hai dubbi profondi → lascia in bianco (vale 0 invece di −0.25). Su 50 domande, meglio 20 giuste e 30 bianche (=20 pt) che 20 giuste, 20 sbagliate e 10 bianche (=15 pt)."}]}
+]},
+{title:"Simulazione 3 — Terza settimana",lessons:[
+{title:"Simulazione di consolidamento",tag:"sim",esercizi:[{q:"Checklist pre-test (3 giorni prima)",a:"✓ Prenota il TOLC su testcisia.it se non l'hai già fatto\n✓ Controlla l'orario e il luogo della sessione\n✓ Porta documento d'identità valido\n✓ Vai a dormire a orari normali questa settimana\n✓ Evita di studiare materiale nuovo gli ultimi 2 giorni"},{q:"Il giorno del test: cosa fare",a:"• Arriva 20 min prima\n• Porta documento d'identità\n• Non saltare la colazione\n• Prima domanda di ogni sezione: leggila due volte\n• Non passare più di 2.5 min su una singola domanda di matematica"}]}
+]},
+{title:"Ripasso flash argomenti chiave",lessons:[
+{title:"Formulario rapido matematica",tag:"teoria",teoria:`<strong>MINI-FORMULARIO DA RIPASSARE L'ULTIMA SETTIMANA</strong><br><br>Equazione 2° grado: x = (−b ± √(b²−4ac)) / 2a<br>Pitagora: a²+b²=c²<br>Area cerchio: πr² | Circonferenza: 2πr<br>Pendenza retta: m=(y₂−y₁)/(x₂−x₁)<br>sin²+cos²=1<br>log(ab)=log a + log b<br>aᵐ×aⁿ=aᵐ⁺ⁿ<br>Media=Σx/n | P(A)=fav/tot<br><br><strong>FISICA:</strong><br>s=vt | v=v₀+at | s=v₀t+½at²<br>F=ma | P=mg | W=Fd | Ec=½mv²<br>V=RI | P=VI<br>v=fλ<br><br><strong>CHIMICA:</strong><br>n=m/M | pH=−log[H⁺] | PV=nRT`,formule:[],esercizi:[{q:"Ripasso rapido: formula quadratica?",a:"x = (−b ± √(b²−4ac)) / 2a"},{q:"Ripasso rapido: legge di Ohm?",a:"V = R × I"},{q:"Ripasso rapido: energia cinetica?",a:"Ec = ½mv²"},{q:"Ripasso rapido: identità trigonometrica fondamentale?",a:"sin²α + cos²α = 1"}]}
+]}
+]}
+]}
+];
+
+function build(){
+  const root=document.getElementById('root');
+  PHASES.forEach(ph=>{
+    const pd=document.createElement('div');
+    pd.className='phase';
+    pd.id=ph.id;
+    let subHTML='';
+    ph.subjects.forEach((sub,si)=>{
+      let modHTML='';
+      sub.modules.forEach((mod,mi)=>{
+        let lesHTML='';
+        mod.lessons.forEach((les,li)=>{
+          const key=`${ph.id}-${si}-${mi}-${li}`;
+          const ck=ls(key);
+          let inner='';
+          if(les.teoria){
+            inner+=`<div class="content-block"><div class="cb-label">📖 Spiegazione</div><div class="teoria-text">${les.teoria}</div></div>`;
+          }
+          if(les.formule && les.formule.length){
+            inner+=`<div class="content-block"><div class="cb-label">📐 Formule chiave</div><div class="formula-box">${les.formule.join('<br>')}</div></div>`;
+          }
+          if(les.esercizi && les.esercizi.length){
+            inner+=`<div class="content-block"><div class="cb-label">✏️ ${les.tag==='sim'?'Simulazione':'Esercizi'}</div><div class="esercizi-list">`;
+            les.esercizi.forEach((ez,ei)=>{
+              inner+=`<div class="esercizio">
+                <div class="ez-q" onclick="toggleAnswer('ea-${key}-${ei}',this)">
+                  <span class="ez-num">${String(ei+1).padStart(2,'0')}</span>
+                  <span class="ez-text">${ez.q}</span>
+                  <span class="ez-reveal">▾ risposta</span>
+                </div>
+                <div class="ez-answer" id="ea-${key}-${ei}">
+                  <div class="answer-label">✓ Soluzione</div>
+                  <div class="answer-text">${ez.a}</div>
+                </div>
+              </div>`;
+            });
+            inner+='</div></div>';
+          }
+          lesHTML+=`<div class="lesson" id="les-${key}">
+            <div class="lesson-top" onclick="toggleLesson('${key}',this)">
+              <div class="les-check ${ck?'checked':''}" id="lc-${key}"></div>
+              <div class="les-info"><div class="les-title ${ck?'done':''}" id="lt-${key}">${les.title}</div></div>
+              <span class="les-tag tag-${les.tag}">${les.tag}</span>
+            </div>
+            <div class="les-content" id="lcont-${key}">${inner}</div>
+          </div>`;
+        });
+        const mk=`mod-${ph.id}-${si}-${mi}`;
+        const allDone=mod.lessons.every((_,li)=>ls(`${ph.id}-${si}-${mi}-${li}`));
+        modHTML+=`<div class="module" id="${mk}">
+          <div class="mod-hdr" onclick="toggleMod('${mk}',this)">
+            <div class="mod-check ${allDone?'checked':''}" id="mc-${mk}"></div>
+            <div class="mod-title ${allDone?'done':''}" id="mt-${mk}">${mod.title}</div>
+            <div class="mod-chev" id="mch-${mk}">▾</div>
+          </div>
+          <div class="lessons" id="ml-${mk}">${lesHTML}</div>
+        </div>`;
+      });
+      subHTML+=`<div class="subj-group">
+        <div class="subj-hdr">
+          <div class="subj-bar" style="background:${ph.color}"></div>
+          <div class="subj-name">${sub.name}</div>
+          <div class="subj-prog" id="sp-${ph.id}-${si}">0/${sub.modules.reduce((a,m)=>a+m.lessons.length,0)}</div>
+        </div>
+        ${modHTML}
+      </div>`;
+    });
+    pd.innerHTML=`
+      <div class="phase-hdr" id="ph-${ph.id}" onclick="togglePhase('${ph.id}',this)">
+        <div class="phase-left">
+          <div class="phase-dot" style="background:${ph.color}"></div>
+          <div class="phase-title">${ph.title}</div>
+        </div>
+        <div class="phase-meta">
+          <div class="phase-date">${ph.date}</div>
+          <div class="phase-pct" id="pp-${ph.id}">0%</div>
+          <div class="chevron">▾</div>
+        </div>
+      </div>
+      <div class="phase-body" id="pb-${ph.id}">
+        ${subHTML}
+        ${ph.tip?`<div class="tip-box">${ph.tip}</div>`:''}
+      </div>`;
+    root.appendChild(pd);
+  });
+  updateAll();
+}
+
+function ls(key){return localStorage.getItem(key)==='1';}
+
+function togglePhase(id,hdr){
+  const b=document.getElementById('pb-'+id);
+  const open=b.classList.contains('open');
+  b.classList.toggle('open',!open);
+  hdr.classList.toggle('open',!open);
+}
+
+function toggleMod(mk,hdr){
+  const lessons=document.getElementById('ml-'+mk);
+  const chev=document.getElementById('mch-'+mk);
+  const open=lessons.classList.contains('open');
+  lessons.classList.toggle('open',!open);
+  chev.classList.toggle('open',!open);
+}
+
+function toggleLesson(key,el){
+  // open/close content
+  const cont=document.getElementById('lcont-'+key);
+  const contOpen=cont.classList.contains('open');
+  // if clicking the checkbox area
+  const ck=ls(key);
+  const newVal=ck?'0':'1';
+  localStorage.setItem(key,newVal);
+  document.getElementById('lc-'+key).classList.toggle('checked',newVal==='1');
+  document.getElementById('lt-'+key).classList.toggle('done',newVal==='1');
+  // toggle content only if not already open or if marking done
+  if(!contOpen){
+    cont.classList.add('open');
+  }
+  updateAll();
+  updateModChecks();
+}
+
+function toggleAnswer(id,el){
+  const ans=document.getElementById(id);
+  const open=ans.classList.contains('open');
+  ans.classList.toggle('open',!open);
+  const rev=el.querySelector('.ez-reveal');
+  if(rev) rev.textContent=open?'▾ risposta':'▴ nascondi';
+}
+
+function updateModChecks(){
+  PHASES.forEach(ph=>{
+    ph.subjects.forEach((sub,si)=>{
+      sub.modules.forEach((mod,mi)=>{
+        const mk=`mod-${ph.id}-${si}-${mi}`;
+        const allDone=mod.lessons.every((_,li)=>ls(`${ph.id}-${si}-${mi}-${li}`));
+        const mc=document.getElementById('mc-'+mk);
+        const mt=document.getElementById('mt-'+mk);
+        if(mc) mc.classList.toggle('checked',allDone);
+        if(mt) mt.classList.toggle('done',allDone);
+      });
+    });
+  });
+}
+
+function updateAll(){
+  let tot=0,don=0;
+  const cats={math:{t:0,d:0},science:{t:0,d:0},logic:{t:0,d:0},sim:{t:0,d:0}};
+  PHASES.forEach(ph=>{
+    let pt=0,pd_=0;
+    ph.subjects.forEach((sub,si)=>{
+      let st=0,sd=0;
+      sub.modules.forEach((mod,mi)=>{
+        mod.lessons.forEach((_,li)=>{
+          const key=`${ph.id}-${si}-${mi}-${li}`;
+          tot++;pt++;st++;
+          cats[ph.cat].t++;
+          if(ls(key)){don++;pd_++;sd++;cats[ph.cat].d++;}
+        });
+      });
+      const sp=document.getElementById(`sp-${ph.id}-${si}`);
+      if(sp) sp.textContent=`${sd}/${st}`;
+    });
+    const pct=pt>0?Math.round(pd_/pt*100):0;
+    const pp=document.getElementById('pp-'+ph.id);
+    if(pp) pp.textContent=pct+'%';
+  });
+  const gp=tot>0?Math.round(don/tot*100):0;
+  document.getElementById('total-cnt').textContent=`${don} / ${tot}`;
+  document.getElementById('total-bar').style.width=gp+'%';
+  ['math','science','logic','sim'].forEach(c=>{
+    const pct=cats[c].t>0?Math.round(cats[c].d/cats[c].t*100):0;
+    const pe=document.getElementById('pct-'+c);
+    const be=document.getElementById('bar-'+c);
+    if(pe) pe.textContent=pct+'%';
+    if(be) be.style.width=pct+'%';
+  });
+}
+
+function resetAll(){
+  if(!confirm('Azzerare tutto il progresso? Non si può annullare.')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+build();
+</script>
+</body>
+</html>
