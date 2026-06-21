@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trigonometria Interattiva</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f1117;
+    color: #e8e6f0;
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+  h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; color: #fff; margin-bottom: 4px; }
+  .subtitle { font-size: 0.82rem; color: #6b6880; margin-bottom: 24px; font-family: 'Space Mono', monospace; }
+  .angle-display { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .angle-label { font-family: 'Space Mono', monospace; font-size: 0.78rem; color: #6b6880; text-transform: uppercase; letter-spacing: 0.08em; }
+  input[type=range] { -webkit-appearance: none; width: 200px; height: 3px; background: #2a2740; border-radius: 2px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #7c6af7; border-radius: 50%; cursor: pointer; box-shadow: 0 0 8px #7c6af755; }
+  .val-badge { font-family: 'Space Mono', monospace; font-size: 0.9rem; color: #fff; background: #1e1c2e; padding: 4px 12px; border-radius: 20px; border: 1px solid #2a2740; min-width: 60px; text-align: center; }
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 640px) { .panels { grid-template-columns: 1fr; } }
+  .panel { background: #14121f; border: 1px solid #1e1c2e; border-radius: 12px; padding: 16px; }
+  .panel-title { font-size: 0.72rem; font-family: 'Space Mono', monospace; color: #6b6880; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  canvas { display: block; width: 100%; }
+  .values-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .value-card { background: #14121f; border: 1px solid #1e1c2e; border-radius: 10px; padding: 12px; text-align: center; }
+  .value-card .label { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: #6b6880; margin-bottom: 4px; text-transform: uppercase; }
+  .value-card .num { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; }
+  .sin-color { color: #f06292; }
+  .cos-color { color: #4fc3f7; }
+  .tan-color { color: #aed581; }
+  .info-box { background: #14121f; border: 1px solid #1e1c2e; border-radius: 12px; padding: 16px; font-size: 0.85rem; line-height: 1.7; color: #b0adc0; }
+  .info-box strong { color: #fff; }
+  .highlight { font-family: 'Space Mono', monospace; font-size: 0.8rem; }
+  .angles-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 16px; }
+  .angle-btn { background: #1e1c2e; border: 1px solid #2a2740; border-radius: 8px; color: #b0adc0; font-family: 'Space Mono', monospace; font-size: 0.7rem; padding: 6px 4px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .angle-btn:hover, .angle-btn.active { background: #2a2740; color: #fff; border-color: #7c6af7; }
+  .fraction { display: inline-flex; flex-direction: column; align-items: center; font-size: 0.85rem; line-height: 1.2; }
+  .fraction .num-top { border-bottom: 1.5px solid currentColor; padding-bottom: 1px; }
+  .fraction .num-bot { padding-top: 1px; }
+</style>
+</head>
+<body>
+
+<h1>Trigonometria Interattiva</h1>
+<p class="subtitle">Trascina l'angolo e osserva seno, coseno e tangente</p>
+
+<div class="angle-display">
+  <span class="angle-label">Angolo</span>
+  <input type="range" id="angleSlider" min="0" max="360" value="30" step="1">
+  <span class="val-badge" id="angleDeg">30°</span>
+  <span class="val-badge" id="angleRad">π/6</span>
+</div>
+
+<div class="panels">
+  <div class="panel">
+    <div class="panel-title">Circonferenza Trigonometrica</div>
+    <canvas id="circleCanvas" width="280" height="280"></canvas>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Grafici sin(x) e cos(x)</div>
+    <canvas id="graphCanvas" width="280" height="280"></canvas>
+  </div>
+</div>
+
+<div class="values-row">
+  <div class="value-card">
+    <div class="label">sin(θ)</div>
+    <div class="num sin-color" id="sinVal"></div>
+  </div>
+  <div class="value-card">
+    <div class="label">cos(θ)</div>
+    <div class="num cos-color" id="cosVal"></div>
+  </div>
+  <div class="value-card">
+    <div class="label">tan(θ)</div>
+    <div class="num tan-color" id="tanVal"></div>
+  </div>
+</div>
+
+<div class="info-box">
+  <strong>Come leggerlo:</strong> Il punto bianco si muove sulla circonferenza.<br>
+  <span class="highlight sin-color">● seno</span> = proiezione verticale (asse Y) &nbsp;|&nbsp;
+  <span class="highlight cos-color">● coseno</span> = proiezione orizzontale (asse X)<br><br>
+  Angoli notevoli — clicca per impostarli:
+  <div class="angles-grid">
+    <button class="angle-btn" onclick="setAngle(0)">0°</button>
+    <button class="angle-btn" onclick="setAngle(30)">30°</button>
+    <button class="angle-btn" onclick="setAngle(45)">45°</button>
+    <button class="angle-btn" onclick="setAngle(60)">60°</button>
+    <button class="angle-btn" onclick="setAngle(90)">90°</button>
+    <button class="angle-btn" onclick="setAngle(120)">120°</button>
+    <button class="angle-btn" onclick="setAngle(135)">135°</button>
+    <button class="angle-btn" onclick="setAngle(150)">150°</button>
+    <button class="angle-btn" onclick="setAngle(180)">180°</button>
+    <button class="angle-btn" onclick="setAngle(270)">270°</button>
+  </div>
+</div>
+
+<script>
+const slider = document.getElementById('angleSlider');
+const angleDegEl = document.getElementById('angleDeg');
+const angleRadEl = document.getElementById('angleRad');
+const sinValEl = document.getElementById('sinVal');
+const cosValEl = document.getElementById('cosVal');
+const tanValEl = document.getElementById('tanVal');
+const circleCanvas = document.getElementById('circleCanvas');
+const cc = circleCanvas.getContext('2d');
+const graphCanvas = document.getElementById('graphCanvas');
+const gc = graphCanvas.getContext('2d');
+
+// Exact values as [numerator, denominator, symbol] or plain string
+const EXACT = {
+  0:   { sin: '0',      cos: '1',      tan: '0' },
+  30:  { sin: '1/2',    cos: '√3/2',   tan: '√3/3' },
+  45:  { sin: '√2/2',   cos: '√2/2',   tan: '1' },
+  60:  { sin: '√3/2',   cos: '1/2',    tan: '√3' },
+  90:  { sin: '1',      cos: '0',      tan: '∞' },
+  120: { sin: '√3/2',   cos: '-1/2',   tan: '-√3' },
+  135: { sin: '√2/2',   cos: '-√2/2',  tan: '-1' },
+  150: { sin: '1/2',    cos: '-√3/2',  tan: '-√3/3' },
+  180: { sin: '0',      cos: '-1',     tan: '0' },
+  210: { sin: '-1/2',   cos: '-√3/2',  tan: '√3/3' },
+  225: { sin: '-√2/2',  cos: '-√2/2',  tan: '1' },
+  240: { sin: '-√3/2',  cos: '-1/2',   tan: '√3' },
+  270: { sin: '-1',     cos: '0',      tan: '∞' },
+  300: { sin: '-√3/2',  cos: '1/2',    tan: '-√3' },
+  315: { sin: '-√2/2',  cos: '√2/2',   tan: '-1' },
+  330: { sin: '-1/2',   cos: '√3/2',   tan: '-√3/3' },
+  360: { sin: '0',      cos: '1',      tan: '0' },
+};
+
+const RAD_LABELS = {
+  0:'0', 30:'π/6', 45:'π/4', 60:'π/3', 90:'π/2',
+  120:'2π/3', 135:'3π/4', 150:'5π/6', 180:'π',
+  210:'7π/6', 225:'5π/4', 240:'4π/3', 270:'3π/2',
+  300:'5π/3', 315:'7π/4', 330:'11π/6', 360:'2π'
+};
+
+function setAngle(deg) {
+  slider.value = deg;
+  draw(deg);
+}
+
+function renderVal(el, text) {
+  // Render fraction like "√3/2" as a visual fraction
+  if (text.includes('/')) {
+    const neg = text.startsWith('-');
+    const clean = neg ? text.slice(1) : text;
+    const [top, bot] = clean.split('/');
+    el.innerHTML = `${neg ? '-' : ''}<span class="fraction"><span class="num-top">${top}</span><span class="num-bot">${bot}</span></span>`;
+  } else {
+    el.textContent = text;
+  }
+}
+
+function drawCircle(deg) {
+  const W = circleCanvas.width, H = circleCanvas.height;
+  const cx = W/2, cy = H/2;
+  const R = W * 0.38;
+  const rad = deg * Math.PI / 180;
+  const px = cx + R * Math.cos(-rad);
+  const py = cy + R * Math.sin(-rad);
+
+  cc.clearRect(0, 0, W, H);
+  cc.strokeStyle = '#1e1c2e'; cc.lineWidth = 1;
+  cc.beginPath(); cc.moveTo(0, cy); cc.lineTo(W, cy); cc.stroke();
+  cc.beginPath(); cc.moveTo(cx, 0); cc.lineTo(cx, H); cc.stroke();
+  cc.fillStyle = '#3a3750'; cc.font = '10px Space Mono, monospace';
+  cc.fillText('1', cx+R+4, cy-4); cc.fillText('-1', cx-R-18, cy-4);
+  cc.fillText('1', cx+4, cy-R-4); cc.fillText('-1', cx+4, cy+R+12);
+
+  cc.beginPath(); cc.arc(cx, cy, R, 0, 2*Math.PI);
+  cc.strokeStyle = '#2a2740'; cc.lineWidth = 1.5; cc.stroke();
+
+  cc.beginPath(); cc.arc(cx, cy, 28, 0, -rad, deg > 0);
+  cc.strokeStyle = '#7c6af755'; cc.lineWidth = 2; cc.stroke();
+
+  cc.beginPath(); cc.moveTo(cx, cy); cc.lineTo(px, py);
+  cc.strokeStyle = '#7c6af7'; cc.lineWidth = 2; cc.stroke();
+
+  cc.beginPath(); cc.moveTo(cx, cy); cc.lineTo(px, cy);
+  cc.strokeStyle = '#4fc3f7'; cc.lineWidth = 2.5; cc.setLineDash([4,3]); cc.stroke(); cc.setLineDash([]);
+
+  cc.beginPath(); cc.moveTo(px, cy); cc.lineTo(px, py);
+  cc.strokeStyle = '#f06292'; cc.lineWidth = 2.5; cc.setLineDash([4,3]); cc.stroke(); cc.setLineDash([]);
+
+  cc.beginPath(); cc.arc(px, py, 6, 0, 2*Math.PI);
+  cc.fillStyle = '#fff'; cc.fill();
+  cc.strokeStyle = '#7c6af7'; cc.lineWidth = 2; cc.stroke();
+
+  cc.beginPath(); cc.arc(cx, cy, 3, 0, 2*Math.PI);
+  cc.fillStyle = '#6b6880'; cc.fill();
+
+  cc.font = '11px Space Grotesk, sans-serif';
+  const sinV = Math.sin(rad), cosV = Math.cos(rad);
+  cc.fillStyle = '#f06292';
+  cc.fillText('sin', px+6, py+(sinV>=0?-4:14));
+  cc.fillStyle = '#4fc3f7';
+  cc.fillText('cos', cx+(cosV>=0?6:-28), cy-6);
+}
+
+function drawGraph(deg) {
+  const W = graphCanvas.width, H = graphCanvas.height;
+  const pad = 28, gw = W-pad*2, gh = H-pad*2;
+  const cx = pad, cy = pad+gh/2;
+
+  gc.clearRect(0,0,W,H);
+  gc.strokeStyle = '#1e1c2e'; gc.lineWidth = 1;
+  gc.beginPath(); gc.moveTo(pad,cy); gc.lineTo(W-pad,cy); gc.stroke();
+  gc.beginPath(); gc.moveTo(pad,pad); gc.lineTo(pad,H-pad); gc.stroke();
+
+  gc.font = '9px Space Mono, monospace'; gc.fillStyle = '#3a3750';
+  gc.fillText('1', pad-16, cy-gh/2+4); gc.fillText('-1', pad-20, cy+gh/2+4);
+  gc.fillText('0', pad-8, cy+12); gc.fillText('π', pad+gw*0.25-4, cy+12);
+  gc.fillText('2π', pad+gw*0.5-8, cy+12); gc.fillText('3π', pad+gw*0.75-8, cy+12);
+  gc.fillText('4π', pad+gw-8, cy+12);
+
+  gc.setLineDash([2,4]); gc.strokeStyle = '#1e1c2e';
+  [0.25,0.5,0.75,1].forEach(f => {
+    gc.beginPath(); gc.moveTo(pad+gw*f,pad); gc.lineTo(pad+gw*f,H-pad); gc.stroke();
+  });
+  gc.setLineDash([]);
+
+  gc.beginPath();
+  for (let i=0;i<=gw;i++) { const a=(i/gw)*4*Math.PI, y=cy-Math.cos(a)*(gh/2-4); i===0?gc.moveTo(pad+i,y):gc.lineTo(pad+i,y); }
+  gc.strokeStyle='#4fc3f7'; gc.lineWidth=1.5; gc.stroke();
+
+  gc.beginPath();
+  for (let i=0;i<=gw;i++) { const a=(i/gw)*4*Math.PI, y=cy-Math.sin(a)*(gh/2-4); i===0?gc.moveTo(pad+i,y):gc.lineTo(pad+i,y); }
+  gc.strokeStyle='#f06292'; gc.lineWidth=1.5; gc.stroke();
+
+  const rad = deg*Math.PI/180;
+  const xPos = pad+(rad/(4*Math.PI))*gw;
+  if (xPos <= W-pad) {
+    gc.beginPath(); gc.moveTo(xPos,pad); gc.lineTo(xPos,H-pad);
+    gc.strokeStyle='#7c6af755'; gc.lineWidth=1; gc.setLineDash([3,3]); gc.stroke(); gc.setLineDash([]);
+    const sinY = cy-Math.sin(rad)*(gh/2-4);
+    gc.beginPath(); gc.arc(xPos,sinY,4,0,2*Math.PI); gc.fillStyle='#f06292'; gc.fill();
+    const cosY = cy-Math.cos(rad)*(gh/2-4);
+    gc.beginPath(); gc.arc(xPos,cosY,4,0,2*Math.PI); gc.fillStyle='#4fc3f7'; gc.fill();
+  }
+
+  gc.font='10px Space Grotesk, sans-serif';
+  gc.fillStyle='#f06292'; gc.fillText('sin(x)', W-56, pad+14);
+  gc.fillStyle='#4fc3f7'; gc.fillText('cos(x)', W-56, pad+28);
+}
+
+function draw(deg) {
+  const rad = deg*Math.PI/180;
+  const s = Math.sin(rad), c = Math.cos(rad), t = Math.tan(rad);
+
+  angleDegEl.textContent = deg+'°';
+  angleRadEl.textContent = RAD_LABELS[deg] || (deg/180).toFixed(2)+'π';
+
+  const exact = EXACT[deg];
+  if (exact) {
+    renderVal(sinValEl, exact.sin);
+    renderVal(cosValEl, exact.cos);
+    renderVal(tanValEl, exact.tan);
+  } else {
+    sinValEl.textContent = s.toFixed(3);
+    cosValEl.textContent = c.toFixed(3);
+    tanValEl.textContent = Math.abs(t)>999 ? '∞' : t.toFixed(3);
+  }
+
+  drawCircle(deg);
+  drawGraph(deg);
+}
+
+slider.addEventListener('input', () => draw(+slider.value));
+draw(30);
+</script>
+</body>
+</html>
